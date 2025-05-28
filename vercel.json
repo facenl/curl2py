@@ -1,3 +1,15 @@
 {
-"rewrites": [{ "source": "/:path*", "destination": "/curl2code.html" }]
+"version": 2,
+"builds": [
+{
+"src": "curl2code.html",
+"use": "@vercel/static"
+}
+],
+"routes": [
+{
+"src": "/",
+"dest": "/curl2code.html"
+}
+]
 }
