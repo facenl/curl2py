@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>cURL to Python Converter - Convert cURL Commands to Python Code Online</title>
+    <meta name="description" content="Convert curl command to Python code online. Automatically transform curl into Python requests code for quick HTTP development. Easy to use and free.">
+    <meta name="keywords" content="curl转python, curl转requests, 在线curl转python, curl to python converter, convert curl to python requests">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/png" sizes="16x16"  href="favicon-16x16.png">
+    <meta name="msapplication-TileColor" content="#ffffff">
+    <meta name="theme-color" content="#ffffff">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Arial', sans-serif;
+        }
+        
+        body, html {
+            height: 100%;
+            overflow: hidden;
+        }
+        
+        .main-container {
+            display: flex;
+            height: 100%;
+        }
+        
+        .left-menu {
+            width: 15%;  /* 调整为15%宽度 */
+            background-color: #f8f9fa;
+            padding: 20px 10px;
+            border-right: 1px solid #dee2e6;
+            overflow-y: auto;
+        }
+        
+        .menu-item {
+            padding: 12px 8px;
+            margin-bottom: 6px;
+            cursor: pointer;
+            border-radius: 4px;
+            transition: all 0.2s;
+            font-size: 0.9rem;
+            color: #495057;
+        }
+        
+        .menu-item:hover {
+            background-color: #e9ecef;
+            color: #212529;
+        }
+        
+        .menu-item.active {
+            background-color: #0d6efd;
+            color: white;
+            font-weight: bold;
+        }
+        
+        .panels-container {
+            display: flex;
+            width: 85%;  /* 剩余85%宽度 */
+            height: 100%;
+        }
+        
+        .left-panel, .right-panel {
+            width: 50%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            background-color: white;
+        }
+        
+        .panel-header {
+            padding: 12px 15px;
+            font-weight: bold;
+            border-bottom: 1px solid #dee2e6;
+            background-color: #f8f9fa;
+            font-size: 0.95rem;
+        }
+        
+        .editor-container {
+            flex: 1;
+            overflow: hidden;
+            position: relative;
+        }
+        
+        textarea {
+            width: 100%;
+            height: 100%;
+            padding: 15px;
+            border: none;
+            resize: none;
+            font-family: 'Consolas', monospace;
+            font-size: 0.85rem;
+            outline: none;
+            background-color: #f8f9fa;
+            line-height: 1.5;
+        }
+        
+        textarea:focus {
+            box-shadow: inset 0 0 0 2px #0d6efd;
+            background-color: white;
+        }
+        
+        .copy-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background-color: #0d6efd;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.75rem;
+            z-index: 10;
+            transition: all 0.2s;
+        }
+        
+        .copy-btn:hover {
+            background-color: #0b5ed7;
+        }
+        
+        .copy-btn.copied {
+            background-color: #198754;
+        }
+        
+        /* 分割线 */
+        .right-panel {
+            position: relative;
+            border-left: 1px solid #dee2e6;
+        }
+        
+        @media (max-width: 768px) {
+            .main-container {
+                flex-direction: column;
+            }
+            
+            .left-menu {
+                width: 100%;
+                height: auto;
+                max-height: 120px;
+                display: flex;
+                overflow-x: auto;
+                padding: 10px;
+                border-right: none;
+                border-bottom: 1px solid #dee2e6;
+            }
+            
+            .menu-item {
+                margin-bottom: 0;
+                margin-right: 8px;
+                white-space: nowrap;
+            }
+            
+            .panels-container {
+                width: 100%;
+                flex-direction: column;
+            }
+            
+            .left-panel, .right-panel {
+                width: 100%;
+                height: 50%;
+            }
+            
+            .right-panel {
+                border-left: none;
+                border-top: 1px solid #dee2e6;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="main-container">
+        <div class="left-menu">
+            <div class="menu-item active">cURL to Python</div>
+            <!-- <div class="menu-item">常用算法</div>
+            <div class="menu-item">技术文章</div>
+            <div class="menu-item">其他工具</div> -->
+        </div>
+        
+        <div class="panels-container">
+            <div class="left-panel">
+                <div class="panel-header">cURL Command</div>
+                <div class="editor-container">
+                    <textarea id="curl-input" placeholder="Paste the cURL command, for example:&#10;curl -X POST 'https://api.example.com/data' &#10;-H 'Content-Type: application/json' &#10;-d '{\"key\":\"value\"}'"></textarea>
+                </div>
+            </div>
+            
+            <div class="right-panel">
+                <div class="panel-header">Python Code</div>
+                <div class="editor-container">
+                    <button class="copy-btn" id="copy-btn">Copy code</button>
+                    <textarea id="python-output" placeholder="The conversion results will be displayed here..." readonly></textarea>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        let debounceTimer;
+        const debounceDelay = 300;
+        
+        // 修复粘贴后自动转换的问题
+        document.getElementById('curl-input').addEventListener('paste', function() {
+            setTimeout(convertCurl, 100); // 延迟确保粘贴完成
+        });
+        
+        document.getElementById('curl-input').addEventListener('input', function() {
+            clearTimeout(debounceTimer);
+            debounceTimer = setTimeout(convertCurl, debounceDelay);
+        });
+        
+        function convertCurl() {
+            const curlCommand = document.getElementById('curl-input').value.trim();
+            
+            if (!curlCommand) {
+                document.getElementById('python-output').value = '';
+                return;
+            }
+            
+            try {
+                const pythonCode = convertCurlToPython(curlCommand);
+                document.getElementById('python-output').value = pythonCode;
+            } catch (error) {
+                document.getElementById('python-output').value = 'Conversion error: ' + error.message;
+            }
+        }
+        
+        document.getElementById('copy-btn').addEventListener('click', function() {
+            const pythonOutput = document.getElementById('python-output');
+            pythonOutput.select();
+            document.execCommand('copy');
+            
+            const copyBtn = document.getElementById('copy-btn');
+            copyBtn.textContent = 'Copied';
+            copyBtn.classList.add('copied');
+            
+            setTimeout(function() {
+                copyBtn.textContent = 'Copy code';
+                copyBtn.classList.remove('copied');
+            }, 2000);
+        });
+        
+        // 菜单项点击事件
+        document.querySelectorAll('.menu-item').forEach(item => {
+            item.addEventListener('click', function() {
+                document.querySelectorAll('.menu-item').forEach(i => i.classList.remove('active'));
+                this.classList.add('active');
+            });
+        });
+        
+        function convertCurlToPython(curlCommand) {
+            // 处理Windows换行符
+            curlCommand = curlCommand.replace(/\r\n/g, ' ').replace(/\n/g, ' ').trim();
+            
+            if (!curlCommand.startsWith('curl ')) {
+                throw new Error('Invalid cURL command: must start with "curl"');
+            }
+            
+            // 提取URL
+            const urlMatch = curlCommand.match(/(?:'|")(https?:\/\/[^'"]+)(?:'|")/);
+            if (!urlMatch) {
+                throw new Error('无法提取URL: 请检查命令格式');
+            }
+            const url = urlMatch[1];
+            
+            // 提取方法
+            let method = 'GET';
+            const methodMatch = curlCommand.match(/-X\s+(\w+)/i);
+            if (methodMatch) {
+                method = methodMatch[1].toUpperCase();
+            }
+            
+            // 提取headers
+            const headers = [];
+            const headerMatches = curlCommand.matchAll(/-H\s+'([^']+)'/gi);
+            for (const match of headerMatches) {
+                const [name, value] = match[1].split(/:\s*/);
+                if (name && value) {
+                    headers.push(`    '${name.trim()}': '${value.trim()}'`);
+                }
+            }
+            
+            // 提取数据
+            let data = '';
+            const dataMatch = curlCommand.match(/-d\s+'([^']+)'/i);
+            if (dataMatch) {
+                data = dataMatch[1];
+            }
+            
+            // 构建Python代码
+            let pythonCode = `import requests\n\n`;
+            
+            if (headers.length > 0) {
+                pythonCode += `headers = {\n${headers.join(',\n')}\n}\n\n`;
+            } else {
+                pythonCode += `headers = {}\n\n`;
+            }
+            
+            if (data) {
+                try {
+                    // 尝试解析JSON数据
+                    JSON.parse(data);
+                    pythonCode += `data = ${data.replace(/'/g, '"')}\n\n`;
+                } catch {
+                    pythonCode += `data = '${data.replace(/'/g, "\\'")}'\n\n`;
+                }
+            }
+            
+            pythonCode += `response = requests.${method.toLowerCase()}('${url}'`;
+            
+            if (headers.length > 0) {
+                pythonCode += `,\n    headers=headers`;
+            }
+            
+            if (data) {
+                pythonCode += `,\n    data=data`;
+            }
+            
+            pythonCode += `)\n\n`;
+            pythonCode += `print(response.status_code)\n`;
+            pythonCode += `print(response.text)`;
+            
+            return pythonCode;
+        }
+    </script>
+</body>
+</html>
